@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 const app = express();
 app.use(bodyParser.json());
@@ -13,7 +13,7 @@ app.listen(port, () => console.log(`Server started! Visit http://localhost:${por
 const timeline = [];
 
 app.get('/', (req, res) => {
-    res.send("Nothing to see here, move along!")
+    res.send("Nothing to see here citizen, move along now")
 });
 
 // Only accessed manualy
