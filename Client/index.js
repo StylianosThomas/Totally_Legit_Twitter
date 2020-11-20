@@ -1,13 +1,56 @@
 const timelineUl = document.getElementById('originalPosts');
 const newPostForm = document.getElementById('newPostForm');
-newPostForm.addEventListener("submit", userAction);
+newPostForm.addEventListener("submit", userAction)
+const url = "https://chan-twit.herokuapp.com";
 
 let thumbsUp = "👍";
 let hilarious = "🤣";
 let thumbsDown = "👎";
 
+getTimeline();
+
+function getTimeline () {
+    fetch(`${url}/feed`)
+        .then(response => response.json())
+        .then(displayTimeline)
+        .catch(error => console.warn(`Oh no: ${error}`))
+};
+
+function displayTimeline (feed) {
+    feed.timeline.forEach(entry => {
+        const newPostLi = document.createElement('li');
+        newPostLi.setAttribute("id", `postLi${entry.id}`);
+        newPostLi.setAttribute("class", "newEntry")
+        timelineUl.append(newPostLi);
+
+        let postContent = entry.post
+        let isGif = postContent.indexOf("https://media") !== -1;
+
+        if (isGif === true) {
+            addGif(entry);
+        } else {
+            addPost(entry);
+        };
+        addReactions(entry);
+        addReplyThread(entry);
+
+        entry.replies.forEach(reply => {
+            const replyThread = document.getElementById(`replyThread${entry.id}`);
+            const newReplyLi = document.createElement('li');
+            newReplyBox = document.createElement('textarea');
+            newReplyBox.setAttribute("class", "newReply")
+            newReplyBox.setAttribute("readonly", "true")
+            newReplyBox.textContent = reply
+            newReplyLi.append(newReplyBox);
+            replyThread.append(newReplyLi);
+        });
+        addReplyForm(entry); 
+    });
+};
+
 function userAction (event) {           // Checks which button the user pressed and if the text is less than 150 characters
     event.preventDefault();
+    getTimeline();
     if (event.submitter.value == "Post" && event.target.newPost.value.length < 150) {
         sendPostToServer(event);
         flyAway();
@@ -16,6 +59,7 @@ function userAction (event) {           // Checks which button the user pressed 
     } else {
       alert("Please keep in mind that your posts are limited to a maximum of 150 characters");
     };
+    setTimeout(() => {  location.reload(); }, 500);
 };
 
 function sendPostToServer (event) {         // We take the text written in the text area by the user and send it the server to be stored as a new entry
@@ -32,7 +76,7 @@ function sendPostToServer (event) {         // We take the text written in the t
         })
     };
   
-    fetch('http://localhost:3000/newpost', options)
+    fetch(`${url}/newpost`, options)
         .then(response => response.json())
         .then(addPostToFeed)
         .catch(error => console.warn(`Oh no: ${error}`))
@@ -42,9 +86,9 @@ function fetchGif (event) {         // We fetch a single random giff using as se
     event.preventDefault();
     const postText=event.target.newPost.value;
     let giphyApiKey = "8x0VRgzjaGPEBptzrtAvSOeWVu6Lxqrb";
-    let url =`https://api.giphy.com/v1/gifs/random?tag=${postText}&api_key=${giphyApiKey}&limit=1"`
+    let gifUrl =`https://api.giphy.com/v1/gifs/random?tag=${postText}&api_key=${giphyApiKey}&limit=1"`
   
-    fetch(url)
+    fetch(gifUrl)
         .then(response => response.json())
         .then(sendGifToServer)
         .catch(error => console.warn(`Oh no: ${error}`))
@@ -63,7 +107,7 @@ function sendGifToServer (giffObject) {         // We get the url of the giff an
         })
     };
   
-    fetch('http://localhost:3000/newpost', options)
+    fetch(`${url}/newpost`, options)
         .then(response => response.json())
         .then(addGifToFeed)
         .catch(error => console.warn(`Oh no: ${error}`))
@@ -154,7 +198,7 @@ function posReaction (event) {      // We send a request to the server to increa
       })
     };
   
-    fetch('http://localhost:3000/posreaction', options)
+    fetch(`${url}/posreaction`, options)
         .then(response => response.json())
         .then(updateReaction)
         .catch(error => console.warn(`Oh no: ${error}`))
@@ -174,7 +218,7 @@ function funReaction (event) {      // We send a request to the server to increa
         })
     };
   
-    fetch('http://localhost:3000/funreaction', options)
+    fetch(`${url}/funreaction`, options)
         .then(response => response.json())
         .then(updateReaction)
         .catch(error => console.warn(`Oh no: ${error}`))
@@ -194,7 +238,7 @@ function negReaction (event) {      // We send a request to the server to increa
         })
     };
   
-    fetch('http://localhost:3000/negreaction', options)
+    fetch(`${url}/negreaction`, options)
         .then(response => response.json())
         .then(updateReaction)
         .catch(error => console.warn(`Oh no: ${error}`))
@@ -236,7 +280,7 @@ function addReplyForm (newEntry) {          // This creates the reply form benea
 
     replyForm.append(replyTextBox);
     replyForm.append(replyButton);
-    postLi.append(replyForm);    
+    postLi.append(replyForm);  
 };
 
 function postReply (event) {            // We take the text written in the reply area by the user and send it the server to be stored inside the original entry
@@ -255,7 +299,7 @@ function postReply (event) {            // We take the text written in the reply
         })
     };
 
-    fetch('http://localhost:3000/newreply', options)
+    fetch(`${url}/newreply`, options)
         .then(response => response.json())
         .then(appendReply)
         .catch(error => console.warn(`Oh no: ${error}`))
